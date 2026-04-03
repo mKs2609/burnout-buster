@@ -380,7 +380,7 @@ with tab3:
             return colors_map.get(val, "")
 
         styled = filtered.style.map(color_risk, subset=["burnout_risk"])
-        st.write(styled, use_container_width=True, height=400)
+        st.dataframe(styled, use_container_width=True, height=400)
 
         st.download_button(
             label="⬇️ Download Dataset (CSV)",
