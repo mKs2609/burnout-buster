@@ -379,8 +379,8 @@ with tab3:
                           "Low": "background-color:#0d4f3c; color:#a7f3d0"}
             return colors_map.get(val, "")
 
-        styled = filtered.style.applymap(color_risk, subset=["burnout_risk"])
-        st.dataframe(styled, use_container_width=True, height=400)
+        styled = filtered.style.map(color_risk, subset=["burnout_risk"])
+        st.write(styled, use_container_width=True, height=400)
 
         st.download_button(
             label="⬇️ Download Dataset (CSV)",
