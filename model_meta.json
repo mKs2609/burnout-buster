@@ -1,0 +1,46 @@
+{
+  "features": [
+    "exams_per_month",
+    "assignments_per_week",
+    "attendance_pressure",
+    "cgpa",
+    "backlogs",
+    "study_hours_per_day",
+    "fomo_score",
+    "peer_pressure",
+    "family_expectations",
+    "social_media_hrs",
+    "rejection_sensitivity",
+    "sleep_hours",
+    "exercise_days",
+    "diet_quality",
+    "confidence",
+    "support_system",
+    "mental_health_visits"
+  ],
+  "classes": [
+    "High",
+    "Low",
+    "Medium"
+  ],
+  "accuracy": 100.0,
+  "feature_importances": {
+    "rejection_sensitivity": 0.1465,
+    "cgpa": 0.1021,
+    "support_system": 0.1014,
+    "confidence": 0.0907,
+    "fomo_score": 0.0839,
+    "peer_pressure": 0.0743,
+    "social_media_hrs": 0.0661,
+    "assignments_per_week": 0.0622,
+    "exams_per_month": 0.0593,
+    "sleep_hours": 0.0513,
+    "family_expectations": 0.0461,
+    "exercise_days": 0.0344,
+    "diet_quality": 0.0299,
+    "attendance_pressure": 0.0281,
+    "study_hours_per_day": 0.018,
+    "backlogs": 0.0045,
+    "mental_health_visits": 0.0014
+  }
+}
