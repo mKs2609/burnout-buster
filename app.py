@@ -395,7 +395,8 @@ with tab4:
             pwd = st.text_input("Enter counselor password", type="password",
                                 placeholder="••••••••", key="counselor_pwd")
             if st.button("🔓 Login", use_container_width=True, key="login_btn"):
-                COUNSELOR_PASSWORD = "ProjectAlpha01"
+                import os
+                COUNSELOR_PASSWORD = st.secrets.get("COUNSELOR_PASSWORD", "changeme")
                 if pwd == COUNSELOR_PASSWORD:
                     st.session_state.counselor_logged_in = True
                     st.rerun()
