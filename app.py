@@ -401,12 +401,7 @@ with tab4:
                     st.rerun()
                 else:
                     st.error("❌ Incorrect password.")
-            st.markdown("""
-            <div style="background:#1e1e3a;border:1px solid #2d2d5e;border-radius:10px;
-            padding:12px 16px;margin-top:16px;color:#64748b;font-size:12px;">
-            🔒 Default password: <code style="color:#a78bfa">vips2024</code><br>
-            Change it in app.py → COUNSELOR_PASSWORD variable
-            </div>""", unsafe_allow_html=True)
+           
     else:
         # ── Logged in ──────────────────────────────────────────────────────────
         hdr1, hdr2 = st.columns([4, 1])
