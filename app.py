@@ -395,7 +395,7 @@ with tab4:
             pwd = st.text_input("Enter counselor password", type="password",
                                 placeholder="••••••••", key="counselor_pwd")
             if st.button("🔓 Login", use_container_width=True, key="login_btn"):
-                COUNSELOR_PASSWORD = "vips2024"
+                COUNSELOR_PASSWORD = "ProjectAlpha01"
                 if pwd == COUNSELOR_PASSWORD:
                     st.session_state.counselor_logged_in = True
                     st.rerun()
