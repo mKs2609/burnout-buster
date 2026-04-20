@@ -395,16 +395,16 @@ with tab4:
             pwd = st.text_input("Enter counselor password", type="password",
                                 placeholder="••••••••", key="counselor_pwd")
           if st.button("🔓 Login", use_container_width=True, key="login_btn"):
-              try:
-        COUNSELOR_PASSWORD = st.secrets["COUNSELOR_PASSWORD"]
-          except:
-        COUNSELOR_PASSWORD = "vips2024"
-    
-          if pwd == COUNSELOR_PASSWORD:
-        st.session_state.counselor_logged_in = True
-        st.rerun()
-          else:
-        st.error("❌ Incorrect password.")
+                try:
+                    COUNSELOR_PASSWORD = st.secrets["COUNSELOR_PASSWORD"]
+                except:
+                    COUNSELOR_PASSWORD = "vips2024"
+
+                if pwd == COUNSELOR_PASSWORD:
+                    st.session_state.counselor_logged_in = True
+                    st.rerun()
+                else:
+                    st.error("❌ Incorrect password.")
            
            
     else:
