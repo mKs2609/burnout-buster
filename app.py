@@ -398,7 +398,7 @@ with tab4:
                 try:
                     COUNSELOR_PASSWORD = st.secrets["COUNSELOR_PASSWORD"]
                 except:
-                    COUNSELOR_PASSWORD = "vips2024"
+                    COUNSELOR_PASSWORD = "changeme"
 
                 if pwd == COUNSELOR_PASSWORD:
                     st.session_state.counselor_logged_in = True
