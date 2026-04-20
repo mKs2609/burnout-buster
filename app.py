@@ -394,7 +394,7 @@ with tab4:
         with lc:
             pwd = st.text_input("Enter counselor password", type="password",
                                 placeholder="••••••••", key="counselor_pwd")
-          if st.button("🔓 Login", use_container_width=True, key="login_btn"):
+            if st.button("🔓 Login", use_container_width=True, key="login_btn"):
                 try:
                     COUNSELOR_PASSWORD = st.secrets["COUNSELOR_PASSWORD"]
                 except:
