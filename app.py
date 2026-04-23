@@ -45,7 +45,7 @@ html, body, [class*="css"] {
     border-bottom: 3px solid #ff4655;
 }
 .stTabs [data-baseweb="tab"] {
-    color: #aaaaaa !important;
+    color: #ffffff !important;
     border-radius: 0 !important;
     font-family: 'DM Sans', sans-serif !important;
     font-weight: 600 !important;
@@ -273,7 +273,7 @@ def push_notif(name, roll, risk, score, flagged=False):
 unread = sum(1 for n in st.session_state.notifications if not n["read"])
 
 st.markdown(f"""
-<div style="background:#1a1a2e;padding:12px 32px;display:flex;align-items:center;
+<div style="background:#1a1a2e;padding:12px 32px;margin-top:-75px;display:flex;align-items:center;
 justify-content:space-between;border-bottom:3px solid #ff4655;">
   <div style="display:flex;align-items:center;gap:12px;">
     <span style="font-size:22px;">🌸</span>
