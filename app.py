@@ -272,19 +272,17 @@ def push_notif(name, roll, risk, score, flagged=False):
 
 # ── HEADER ─────────────────────────────────────────────────────────────────────
 unread = sum(1 for n in st.session_state.notifications if not n["read"])
-
+notif_html = f"<span style='color:#ff4655;font-size:13px;font-weight:600;'>🔔 {unread} new alert{'s' if unread>1 else ''}</span>" if unread > 0 else ""
 st.markdown(f"""
 <div style="background:#1a1a2e;padding:12px 32px;display:flex;align-items:center;
 justify-content:space-between;border-bottom:3px solid #ff4655;">
   <div style="display:flex;align-items:center;gap:12px;">
     <span style="font-size:22px;">🌸</span>
-    <span style="color:white;font-family:DM Sans,sans-serif;font-weight:700;font-size:20px;">
-      Burnout Buster
-    </span>
+    <span style="color:white;font-family:DM Sans,sans-serif;font-weight:700;font-size:20px;">Burnout Buster</span>
     <span style="color:#666;font-size:13px;margin-left:4px;">VIPS-TC Wellness Platform</span>
   </div>
   <div style="display:flex;align-items:center;gap:20px;">
-    {"<span style='color:#ff4655;font-size:13px;font-weight:600;'>🔔 " + str(unread) + " new alert" + ("s" if unread>1 else "") + "</span>" if unread > 0 else ""}
+    {notif_html}
     <span style="color:#666;font-size:12px;">AIDS 260 Practicum · VIPS-TC</span>
   </div>
 </div>""", unsafe_allow_html=True)
