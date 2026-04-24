@@ -284,7 +284,7 @@ justify-content:space-between;border-bottom:3px solid #ff4655;">
     <span style="color:#666;font-size:13px;margin-left:4px;">VIPS-TC Wellness Platform</span>
   </div>
   <div style="display:flex;align-items:center;gap:20px;">
-    {'<span style="color:#ff4655;font-size:13px;font-weight:600;">🔔 ' + str(unread) + ' new alert' + ('s' if unread>1 else '') + '</span>' if unread > 0 else ''}
+    {"<span style='color:#ff4655;font-size:13px;font-weight:600;'>🔔 " + str(unread) + " new alert" + ("s" if unread>1 else "") + "</span>" if unread > 0 else ""}
     <span style="color:#666;font-size:12px;">AIDS 260 Practicum · VIPS-TC</span>
   </div>
 </div>""", unsafe_allow_html=True)
@@ -895,11 +895,12 @@ with tab4:
                 notes_d  = action_d.get("notes","")
 
                 brd_d = {"High":"#ff4655","Medium":"#fdcb6e","Low":"#00b894"}.get(risk_d,"#ddd")
-                badge_d = f'<span class="risk-badge-{"high" if risk_d=="High" else "medium" if risk_d=="Medium" else "low"}">{risk_d}</span>'
-                flag_badge = ' <span style="background:#1a1a2e;color:#ff4655;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #ff4655;">🚩 PERSISTENT</span>' if flagged_d else ""
+                risk_css = "high" if risk_d=="High" else "medium" if risk_d=="Medium" else "low"
+                badge_d = f'<span class="risk-badge-{risk_css}">{risk_d}</span>'
+                flag_badge = ('<span style="background:#1a1a2e;color:#ff4655;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #ff4655;">🚩 PERSISTENT</span>' if flagged_d else "")
 
                 st.markdown(f"""
-                <div class="student-row student-row-{"high" if risk_d=="High" else "medium" if risk_d=="Medium" else "low"}">
+                <div class="student-row student-row-{risk_css}">
                   <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div>
                       <strong style="color:#1a1a2e;font-size:15px;">{sname_d}</strong>
@@ -912,7 +913,7 @@ with tab4:
                       <div style="color:#aaa;font-size:11px;margin-top:2px;">{ts_d}</div>
                     </div>
                   </div>
-                  {f'<div style="background:#f8f8f8;border-radius:4px;padding:8px 10px;margin-top:10px;color:#555;font-size:13px;"><strong>Student note:</strong> {note_d}</div>' if note_d and str(note_d).strip() and str(note_d).strip() != "nan" else ""}
+                  {('<div style="background:#f8f8f8;border-radius:4px;padding:8px 10px;margin-top:10px;color:#555;font-size:13px;"><strong>Student note:</strong> ' + str(note_d) + '</div>') if note_d and str(note_d).strip() and str(note_d).strip() != 'nan' else ''}
                 </div>""", unsafe_allow_html=True)
 
                 with st.expander(f"Actions for {sname_d} ({roll_d})"):
