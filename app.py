@@ -897,21 +897,23 @@ with tab4:
                 badge_d = f'<span class="risk-badge-{risk_css}">{risk_d}</span>'
                 flag_badge = ('<span style="background:#1a1a2e;color:#ff4655;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid #ff4655;">🚩 PERSISTENT</span>' if flagged_d else "")
 
+                left_html = f"""<strong style="color:#1a1a2e;font-size:15px;">{sname_d}</strong>
+                <span style="color:#888;font-size:12px;margin-left:8px;">Roll: {roll_d}</span>
+                {flag_badge}"""
+
+                right_html = f"""{badge_d}
+                <span style="color:#888;font-size:12px;margin-left:8px;">{score_d}/100</span>
+                <div style="color:#aaa;font-size:11px;margin-top:2px;">{ts_d}</div>"""
+
+                note_html = f"""<div style="background:#f8f8f8;border-radius:4px;padding:8px 10px;margin-top:10px;color:#555;font-size:13px;"><strong>Student note:</strong> {note_d}</div>""" if note_d and str(note_d).strip() and str(note_d).strip() != "nan" else ""
+
                 st.markdown(f"""
                 <div class="student-row student-row-{risk_css}">
                   <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <strong style="color:#1a1a2e;font-size:15px;">{sname_d}</strong>
-                      <span style="color:#888;font-size:12px;margin-left:8px;">Roll: {roll_d}</span>
-                      {flag_badge}
-                    </div>
-                    <div style="text-align:right;">
-                      {badge_d}
-                      <span style="color:#888;font-size:12px;margin-left:8px;">{score_d}/100</span>
-                      <div style="color:#aaa;font-size:11px;margin-top:2px;">{ts_d}</div>
-                    </div>
+                    <div>{left_html}</div>
+                    <div style="text-align:right;">{right_html}</div>
                   </div>
-                  {('<div style="background:#f8f8f8;border-radius:4px;padding:8px 10px;margin-top:10px;color:#555;font-size:13px;"><strong>Student note:</strong> ' + str(note_d) + '</div>') if note_d and str(note_d).strip() and str(note_d).strip() != 'nan' else ''}
+                  {note_html}
                 </div>""", unsafe_allow_html=True)
 
                 with st.expander(f"Actions for {sname_d} ({roll_d})"):
