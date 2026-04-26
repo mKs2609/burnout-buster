@@ -72,9 +72,12 @@ header[data-testid="stHeader"] { display: none !important; }
 /* Content area */
 .block-container {
     padding: 0 !important;
-    padding-top: 60px !important;
+    padding-top: 0px !important;
     max-width: 100% !important;
 }
+.stApp > header { display: none !important; }
+.stApp [data-testid="stHeader"] { display: none !important; }
+.stApp [data-testid="stToolbarActions"] { display: none !important; }
 
 /* Cards */
 .bb-card {
