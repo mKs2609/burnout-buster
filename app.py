@@ -35,6 +35,9 @@ html, body, [class*="css"] {
 
 /* Hide default sidebar toggle on desktop */
 [data-testid="collapsedControl"] { display: none; }
+            [data-testid="stToolbar"] { display: none !important; }
+[data-testid="stDecoration"] { display: none !important; }
+header[data-testid="stHeader"] { display: none !important; }
 
 /* Tabs — navbar style like vlr.gg */
 .stTabs [data-baseweb="tab-list"] {
