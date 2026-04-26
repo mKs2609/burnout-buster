@@ -272,8 +272,13 @@ def push_notif(name, roll, risk, score, flagged=False):
 
 # ── HEADER ─────────────────────────────────────────────────────────────────────
 unread = sum(1 for n in st.session_state.notifications if not n["read"])
-notif_html = f"<span style='color:#ff4655;font-size:13px;font-weight:600;'>🔔 {unread} new alert{'s' if unread>1 else ''}</span>" if unread > 0 else ""
-st.markdown(f"""
+if unread > 0:
+    alert_text = str(unread) + " new alert" + ("s" if unread > 1 else "")
+    notif_part = "<span style='color:#ff4655;font-size:13px;font-weight:600;'>🔔 " + alert_text + "</span>"
+else:
+    notif_part = ""
+
+header_html = """
 <div style="background:#1a1a2e;padding:12px 32px;display:flex;align-items:center;
 justify-content:space-between;border-bottom:3px solid #ff4655;">
   <div style="display:flex;align-items:center;gap:12px;">
@@ -282,10 +287,13 @@ justify-content:space-between;border-bottom:3px solid #ff4655;">
     <span style="color:#666;font-size:13px;margin-left:4px;">VIPS-TC Wellness Platform</span>
   </div>
   <div style="display:flex;align-items:center;gap:20px;">
-    {notif_html}
+    NOTIF_PLACEHOLDER
     <span style="color:#666;font-size:12px;">AIDS 260 Practicum · VIPS-TC</span>
   </div>
-</div>""", unsafe_allow_html=True)
+</div>"""
+
+header_html = header_html.replace("NOTIF_PLACEHOLDER", notif_part)
+st.markdown(header_html, unsafe_allow_html=True)
 
 # ── TABS ───────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
