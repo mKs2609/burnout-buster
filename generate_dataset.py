@@ -1,97 +1,44 @@
-"""
-generate_dataset.py
-Generates a realistic synthetic student burnout dataset
-simulating past college records from engineering colleges in India.
-Run this once to create burnout_dataset.csv
-"""
-
-import numpy as np
-import pandas as pd
-
+"""generate_dataset.py — run once to create burnout_dataset.csv"""
+import numpy as np, pandas as pd
 np.random.seed(42)
-N = 300  # number of student records
 
-def clamp(arr, lo, hi):
-    return np.clip(arr, lo, hi).astype(int)
+def make(n, risk):
+    if risk=="High":
+        e=np.clip(np.random.normal(6,1,n),4,8).astype(int); a=np.clip(np.random.normal(8,1.5,n),5,12).astype(int)
+        sl=np.clip(np.random.normal(4.5,1,n),3,6).astype(int); cg=np.round(np.clip(np.random.normal(5.5,.8,n),4,7),1)
+        bl=np.clip(np.random.poisson(3,n),1,8).astype(int); fo=np.clip(np.random.normal(8,1,n),6,10).astype(int)
+        pp=np.clip(np.random.normal(8,1,n),6,10).astype(int); fe=np.clip(np.random.normal(8,1,n),6,10).astype(int)
+        sm=np.clip(np.random.normal(7,1.5,n),4,12).astype(int); rs=np.clip(np.random.normal(8,1,n),5,10).astype(int)
+        ex=np.clip(np.random.normal(1,1,n),0,3).astype(int); dq=np.clip(np.random.normal(3,1.5,n),1,6).astype(int)
+        co=np.clip(np.random.normal(3,1.5,n),1,5).astype(int); su=np.clip(np.random.normal(3,1.5,n),1,5).astype(int)
+        at=np.clip(np.random.normal(8,1,n),5,10).astype(int); st=np.clip(np.random.normal(3,1.5,n),1,6).astype(int)
+        mh=np.clip(np.random.poisson(.5,n),0,3).astype(int)
+    elif risk=="Low":
+        e=np.clip(np.random.normal(2,1,n),1,4).astype(int); a=np.clip(np.random.normal(3,1,n),1,6).astype(int)
+        sl=np.clip(np.random.normal(8,1,n),6,10).astype(int); cg=np.round(np.clip(np.random.normal(8.5,.8,n),7,10),1)
+        bl=np.clip(np.random.poisson(.2,n),0,2).astype(int); fo=np.clip(np.random.normal(3,1.5,n),1,5).astype(int)
+        pp=np.clip(np.random.normal(3,1.5,n),1,5).astype(int); fe=np.clip(np.random.normal(4,1.5,n),1,6).astype(int)
+        sm=np.clip(np.random.normal(2,1,n),0,4).astype(int); rs=np.clip(np.random.normal(3,1.5,n),1,5).astype(int)
+        ex=np.clip(np.random.normal(5,1,n),3,7).astype(int); dq=np.clip(np.random.normal(7,1.5,n),5,10).astype(int)
+        co=np.clip(np.random.normal(8,1,n),6,10).astype(int); su=np.clip(np.random.normal(8,1,n),6,10).astype(int)
+        at=np.clip(np.random.normal(4,1.5,n),1,6).astype(int); st=np.clip(np.random.normal(7,1.5,n),5,12).astype(int)
+        mh=np.clip(np.random.poisson(.1,n),0,1).astype(int)
+    else:
+        e=np.clip(np.random.normal(4,1.5,n),2,7).astype(int); a=np.clip(np.random.normal(5,1.5,n),2,9).astype(int)
+        sl=np.clip(np.random.normal(6,1,n),4,8).astype(int); cg=np.round(np.clip(np.random.normal(7,.8,n),5,9),1)
+        bl=np.clip(np.random.poisson(1.2,n),0,4).astype(int); fo=np.clip(np.random.normal(5.5,1.5,n),3,8).astype(int)
+        pp=np.clip(np.random.normal(5.5,1.5,n),3,8).astype(int); fe=np.clip(np.random.normal(6,1.5,n),3,9).astype(int)
+        sm=np.clip(np.random.normal(4,1.5,n),1,8).astype(int); rs=np.clip(np.random.normal(5,1.5,n),2,8).astype(int)
+        ex=np.clip(np.random.normal(3,1.5,n),0,6).astype(int); dq=np.clip(np.random.normal(5,1.5,n),2,8).astype(int)
+        co=np.clip(np.random.normal(5,1.5,n),2,8).astype(int); su=np.clip(np.random.normal(5,1.5,n),2,8).astype(int)
+        at=np.clip(np.random.normal(6,1.5,n),3,9).astype(int); st=np.clip(np.random.normal(5,1.5,n),2,9).astype(int)
+        mh=np.clip(np.random.poisson(.3,n),0,2).astype(int)
+    return pd.DataFrame({"exams_per_month":e,"assignments_per_week":a,"attendance_pressure":at,
+        "cgpa":cg,"backlogs":bl,"study_hours_per_day":st,"fomo_score":fo,"peer_pressure":pp,
+        "family_expectations":fe,"social_media_hrs":sm,"rejection_sensitivity":rs,"sleep_hours":sl,
+        "exercise_days":ex,"diet_quality":dq,"confidence":co,"support_system":su,
+        "mental_health_visits":mh,"burnout_risk":risk})
 
-# ── Academic features ──────────────────────────────────────────────────────────
-exams_per_month       = clamp(np.random.normal(4, 1.5, N), 1, 8)
-assignments_per_week  = clamp(np.random.normal(5, 2,   N), 1, 12)
-attendance_pressure   = clamp(np.random.normal(6, 2,   N), 1, 10)
-cgpa                  = np.round(np.clip(np.random.normal(7.2, 1.0, N), 4.0, 10.0), 1)
-backlogs              = clamp(np.random.poisson(1.2, N), 0, 8)
-study_hours_per_day   = clamp(np.random.normal(5, 2,   N), 1, 12)
-
-# ── Social / psychological features ──────────────────────────────────────────
-fomo_score            = clamp(np.random.normal(6, 2,   N), 1, 10)
-peer_pressure         = clamp(np.random.normal(6, 2,   N), 1, 10)
-family_expectations   = clamp(np.random.normal(7, 1.5, N), 1, 10)
-social_media_hrs      = clamp(np.random.normal(4, 2,   N), 0, 12)
-rejection_sensitivity = clamp(np.random.normal(5, 2,   N), 1, 10)
-
-# ── Lifestyle features ─────────────────────────────────────────────────────────
-sleep_hours           = clamp(np.random.normal(6, 1.5, N), 3, 10)
-exercise_days         = clamp(np.random.normal(2, 1.5, N), 0, 7)
-diet_quality          = clamp(np.random.normal(5, 2,   N), 1, 10)
-
-# ── Emotional / support features ─────────────────────────────────────────────
-confidence            = clamp(np.random.normal(5, 2,   N), 1, 10)
-support_system        = clamp(np.random.normal(5, 2,   N), 1, 10)
-mental_health_visits  = clamp(np.random.poisson(0.5,   N), 0, 5)
-
-# ── Derive burnout risk label ─────────────────────────────────────────────────
-# Higher score → higher burnout risk
-risk_score = (
-    exams_per_month * 0.8
-    + assignments_per_week * 0.7
-    + attendance_pressure * 0.6
-    + (10 - cgpa) * 1.0          # low CGPA → more stress
-    + backlogs * 1.5
-    + fomo_score * 0.7
-    + peer_pressure * 0.8
-    + family_expectations * 0.6
-    + social_media_hrs * 0.4
-    + rejection_sensitivity * 0.5
-    + (10 - sleep_hours) * 1.2   # less sleep → more risk
-    + (7 - exercise_days) * 0.3  # no exercise → more risk
-    + (10 - diet_quality) * 0.3
-    + (10 - confidence) * 0.9
-    + (10 - support_system) * 0.7
-    + np.random.normal(0, 2, N)  # noise
-)
-
-# Normalise to [0, 100] and bin into Low / Medium / High
-risk_norm = (risk_score - risk_score.min()) / (risk_score.max() - risk_score.min()) * 100
-
-def label(r):
-    if r < 38:   return "Low"
-    elif r < 68: return "Medium"
-    else:         return "High"
-
-burnout_risk = [label(r) for r in risk_norm]
-
-df = pd.DataFrame({
-    "exams_per_month":       exams_per_month,
-    "assignments_per_week":  assignments_per_week,
-    "attendance_pressure":   attendance_pressure,
-    "cgpa":                  cgpa,
-    "backlogs":              backlogs,
-    "study_hours_per_day":   study_hours_per_day,
-    "fomo_score":            fomo_score,
-    "peer_pressure":         peer_pressure,
-    "family_expectations":   family_expectations,
-    "social_media_hrs":      social_media_hrs,
-    "rejection_sensitivity": rejection_sensitivity,
-    "sleep_hours":           sleep_hours,
-    "exercise_days":         exercise_days,
-    "diet_quality":          diet_quality,
-    "confidence":            confidence,
-    "support_system":        support_system,
-    "mental_health_visits":  mental_health_visits,
-    "burnout_risk":          burnout_risk,
-})
-
-df.to_csv("burnout_dataset.csv", index=False)
-print(f"✅ Dataset saved: {len(df)} rows")
-print(df["burnout_risk"].value_counts())
-print(df.head())
+df=pd.concat([make(100,"High"),make(100,"Medium"),make(100,"Low")]).sample(frac=1,random_state=42).reset_index(drop=True)
+df.to_csv("burnout_dataset.csv",index=False)
+print("Dataset saved:", df["burnout_risk"].value_counts().to_dict())
