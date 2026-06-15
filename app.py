@@ -367,9 +367,29 @@ justify-content:space-between;border-bottom:1px solid #1e2333;position:sticky;to
   </div>
 </div>"""
 
-navbar = navbar.replace("ALERT_PLACEHOLDER", alert_html)
-navbar = navbar.replace("USER_PLACEHOLDER", user_html)
-st.markdown(navbar, unsafe_allow_html=True)
+if unread > 0:
+    alert_part = str(unread) + " NEW"
+    alert_html = "<span style='background:#ff4655;color:white;font-size:11px;font-weight:700;padding:3px 8px;border-radius:12px;margin-left:12px;'>" + alert_part + "</span>"
+else:
+    alert_html = ""
+
+if st.session_state.student_logged_in:
+    user_html = "<span style='color:#48c78e;font-size:13px;font-weight:600;'>● " + student_name + "</span>"
+else:
+    user_html = "<span style='color:#4a5568;font-size:13px;'>Not logged in</span>"
+
+navbar_html = "<div style='background:#0d1117;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e2333;'>"
+navbar_html += "<div style='display:flex;align-items:center;gap:16px;'>"
+navbar_html += "<div style='background:linear-gradient(135deg,#ff4655,#c9304a);width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;'>🎯</div>"
+navbar_html += "<div><div style='color:white;font-family:Barlow,sans-serif;font-weight:800;font-size:18px;letter-spacing:0.5px;line-height:1;'>BURNOUT BUSTER</div>"
+navbar_html += "<div style='color:#4a5568;font-size:11px;letter-spacing:1px;'>VIPS-TC WELLNESS PLATFORM</div></div></div>"
+navbar_html += "<div style='display:flex;align-items:center;gap:20px;'>"
+navbar_html += alert_html
+navbar_html += user_html
+navbar_html += "<span style='color:#2d3550;font-size:18px;'>|</span>"
+navbar_html += "<span style='color:#4a5568;font-size:12px;'>Mohit Kumar</span>"
+navbar_html += "</div></div>"
+st.markdown(navbar_html, unsafe_allow_html=True)
 
 # ── TABS ───────────────────────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
@@ -972,22 +992,25 @@ with tab4:
 
                 flag_html = '<span style="background:rgba(255,70,85,0.15);color:#ff4655;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid rgba(255,70,85,0.3);margin-left:8px;">PERSISTENT</span>' if flagged_d else ""
 
-                st.markdown(f"""
-                <div class="student-row student-row-{risk_css_d}">
-                  <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                      <strong style="color:#e2e8f0;font-size:15px;">{sname_d}</strong>
-                      <span style="color:#4a5568;font-size:12px;margin-left:8px;">Roll: {roll_d}</span>
-                      <span style="color:#2d3550;font-size:12px;margin-left:8px;">{branch_d}-{section_d}</span>
-                      {flag_html}{consistency_flag}
-                    </div>
-                    <div style="text-align:right;">
-                      <span class="badge-{risk_css_d}">{risk_d.upper()}</span>
-                      <span style="color:#8892a4;font-size:13px;margin-left:8px;font-family:Barlow Condensed,sans-serif;font-weight:700;">{score_d}/100</span>
-                      <div style="color:#2d3550;font-size:11px;margin-top:3px;">{ts_d}</div>
-                    </div>
-                  </div>
-                </div>""", unsafe_allow_html=True)
+                left_part = "<strong style='color:#e2e8f0;font-size:15px;'>" + sname_d + "</strong>"
+                left_part += "<span style='color:#4a5568;font-size:12px;margin-left:8px;'>Roll: " + roll_d + "</span>"
+                left_part += "<span style='color:#2d3550;font-size:12px;margin-left:8px;'>" + str(branch_d) + "-" + str(section_d) + "</span>"
+                left_part += flag_html + consistency_flag
+
+                right_part = "<span class='badge-" + risk_css_d + "'>" + risk_d.upper() + "</span>"
+                right_part += "<span style='color:#8892a4;font-size:13px;margin-left:8px;font-family:Barlow Condensed,sans-serif;font-weight:700;'>" + str(score_d) + "/100</span>"
+                right_part += "<div style='color:#2d3550;font-size:11px;margin-top:3px;'>" + str(ts_d) + "</div>"
+
+                note_part = ""
+                if note_d and str(note_d).strip() and str(note_d).strip() != "nan":
+                    note_part = "<div style='background:#1a1f35;border-left:3px solid #f5a623;border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;color:#8892a4;font-size:13px;'><strong style='color:#f5a623;'>Student Note:</strong> " + str(note_d) + "</div>"
+
+                card_html = "<div class='student-row student-row-" + risk_css_d + "'>"
+                card_html += "<div style='display:flex;justify-content:space-between;align-items:center;'>"
+                card_html += "<div>" + left_part + "</div>"
+                card_html += "<div style='text-align:right;'>" + right_part + "</div>"
+                card_html += "</div>" + note_part + "</div>"
+                st.markdown(card_html, unsafe_allow_html=True)
 
                 with st.expander(f"Actions — {sname_d} ({roll_d})"):
                     # College records view
