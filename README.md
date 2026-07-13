@@ -1,7 +1,7 @@
 # 🔥 Burnout Buster — Student Burnout Risk Prediction
 
-> **AIDS 260 Practicum Project | VIPS-TC College of Engineering**  
-> Team: Yash Choudhary · Mohit Kumar · Lakshay | Supervisor: Dr Sapna Yadav
+#  VIPS-TC College of Engineering**  
+>  Mohit Kumar 
 
 ---
 
