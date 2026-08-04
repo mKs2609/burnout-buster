@@ -1,11 +1,11 @@
-# 🔥 Burnout Buster — Student Burnout Risk Prediction
+#  Burnout Buster — Student Burnout Risk Prediction
 
 #  VIPS-TC College of Engineering**  
 >  Mohit Kumar 
 
 ---
 
-## 📌 About
+## About:-
 
 Burnout Buster is an ML-powered web app that predicts student burnout risk
 (Low / Medium / High) based on 17 academic, social, lifestyle, and emotional
@@ -19,7 +19,7 @@ before** a student hits clinical burnout.
 
 ---
 
-## 🚀 Quick Start (Run Locally)
+## Quick Start (Run Locally):-
 
 ### Step 1 — Install Python
 Make sure Python 3.9+ is installed. Download from https://python.org
@@ -50,7 +50,7 @@ Open http://localhost:8501 in your browser. 🎉
 
 ---
 
-## 📁 File Structure
+## File Structure:-
 
 ```
 burnout-buster/
@@ -67,7 +67,7 @@ burnout-buster/
 
 ---
 
-## 🌐 Deploy Online (Free — Streamlit Cloud)
+## Deploy Online (Free — Streamlit Cloud):-
 
 1. Create a free account at https://streamlit.io/cloud
 2. Push this entire folder to a GitHub repository
@@ -77,7 +77,7 @@ burnout-buster/
 
 ---
 
-## 📊 Features Tracked
+## Features Tracked:-
 
 | Category       | Features |
 |----------------|----------|
@@ -89,7 +89,7 @@ burnout-buster/
 
 ---
 
-## 🧠 Model Details
+## Model Details:-
 
 - **Algorithm:** Random Forest (300 trees, balanced class weights)
 - **Accuracy:** 99%+ on balanced 300-student dataset
@@ -98,7 +98,7 @@ burnout-buster/
 
 ---
 
-## 🌍 SDG Alignment
+## SDG Alignment:-
 
 | SDG | Connection |
 |-----|------------|
@@ -108,7 +108,7 @@ burnout-buster/
 
 ---
 
-## 📞 Crisis Resources (India)
+## Crisis Resources (India):-
 
 | Helpline | Number |
 |----------|--------|
