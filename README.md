@@ -45,7 +45,7 @@ Burnout Buster takes 17 validated inputs spanning academics, social pressure, li
 
 
 ```
-🔗 https://burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app/
+https://burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app/
 ```
 
 ## Tech Stack
