@@ -3,10 +3,12 @@
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-FF4B4B)](https://streamlit.io)
 [![Model](https://img.shields.io/badge/Model-Random%20Forest-brightgreen)]()
-[![License](https://img.shields.io/badge/License-Not%20Specified-lightgrey)]()
+[![Live Demo](https://img.shields.io/badge/Demo-Live-success)](https://burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app/)
 [![Status](https://img.shields.io/badge/Status-Prototype-orange)]()
 
 An ML-powered web app that predicts a student's burnout risk (**Low / Medium / High**) from 17 academic, social, lifestyle, and emotional signals — built to help counselors and institutions intervene *before* a student hits clinical burnout.
+
+**🔗 Live App:** [burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app](https://burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app/)
 
 > Built at VIPS-TC College of Engineering by **Mohit Kumar** (AIDS-A, Batch 2024)
 
@@ -15,7 +17,7 @@ An ML-powered web app that predicts a student's burnout risk (**Low / Medium / H
 ## Table of Contents
 
 - [Overview](#overview)
-- [Demo](#demo)
+- [Key Highlights](#key-highlights)
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
 - [Project Structure](#project-structure)
@@ -27,6 +29,7 @@ An ML-powered web app that predicts a student's burnout risk (**Low / Medium / H
 - [Crisis Resources (India)](#crisis-resources-india)
 - [Roadmap](#roadmap)
 - [Disclaimer](#disclaimer)
+- [Author](#author)
 
 ---
 
@@ -40,24 +43,24 @@ Burnout Buster takes 17 validated inputs spanning academics, social pressure, li
 - **Interface:** Streamlit web app
 - **Validation:** 5-fold stratified cross-validation
 
-## Demo
+## Key Highlights
 
-
-
-```
-https://burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app/
-```
+- ✅ **End-to-end ML pipeline** — from synthetic data generation to model training to a deployed, interactive web app
+- ✅ **Live, publicly deployed demo** — try it without installing anything
+- ✅ **Domain-informed feature engineering** — 17 features grounded in academic, social, lifestyle, and emotional wellbeing research
+- ✅ **Reproducible workflow** — dataset generation and model training are scripted and re-runnable from scratch
+- ✅ **Social-impact framing** — aligned with UN Sustainable Development Goals and paired with real crisis-support resources
 
 ## Tech Stack
 
-| Layer            | Tool                          |
-| ----------------- | ------------------------------ |
-| Language          | Python 3.9+                    |
-| ML                | scikit-learn (Random Forest)   |
-| Data              | pandas / synthetic generator   |
-| App / UI          | Streamlit                      |
-| Persistence       | `.pkl` model + label encoder   |
-| Dev environment   | `.devcontainer` (Codespaces-ready) |
+| Layer            | Tool                                |
+| ----------------- | ------------------------------------ |
+| Language          | Python 3.9+                          |
+| ML                | scikit-learn (Random Forest)         |
+| Data              | pandas / synthetic data generator    |
+| App / UI          | Streamlit                            |
+| Persistence       | `.pkl` model + label encoder         |
+| Dev environment   | `.devcontainer` (Codespaces-ready)   |
 
 ## Quick Start
 
@@ -111,7 +114,7 @@ burnout-buster/
 1. `generate_dataset.py` synthesizes a labeled dataset of student profiles across the 17 tracked features.
 2. `train_model.py` trains a Random Forest classifier on that dataset, evaluates it with 5-fold stratified cross-validation, and serializes the model, label encoder, and metadata.
 3. `app.py` loads the trained artifacts and serves a Streamlit form where a user enters their own values across the 17 inputs; the model returns a Low / Medium / High risk classification.
-4. `database.py` handles storing/retrieving submissions (see note below on what to document here).
+4. `database.py` handles storing and retrieving submissions from the app.
 
 ## Model Details
 
@@ -132,7 +135,11 @@ burnout-buster/
 
 ## Deployment
 
-Free deployment via Streamlit Community Cloud:
+Live app deployed via Streamlit Community Cloud:
+
+**🔗 [burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app](https://burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app/)**
+
+To deploy your own copy:
 
 1. Create a free account at [streamlit.io/cloud](https://streamlit.io/cloud)
 2. Push this repo to GitHub
@@ -164,37 +171,19 @@ If you or someone you know is struggling, help is available:
 - [ ] Add unit tests for the training pipeline and app logic
 - [ ] Validate the model against real (anonymized) student data
 - [ ] Add confidence scores / explainability (e.g. SHAP) to predictions
-- [ ] Add a live deployed demo link
-- [ ] License file
+- [ ] Add screenshots / GIF walkthrough of the app
+- [ ] Add a license file
 
 ## Disclaimer
 
 This tool is a prototype trained on **synthetic data** and is intended for educational and demonstration purposes. It is **not a clinical diagnostic tool** and should not replace professional mental health evaluation. If you are in crisis, please contact one of the helplines above or your local emergency services.
 
+## Author
+
+**Mohit Kumar**
+AIDS-A, Batch 2024 — VIPS-TC College of Engineering
+GitHub: [@mKs2609](https://github.com/mKs2609)
+
 ---
 
 *Made with ❤️ at VIPS-TC | AIDS-A Batch 2024*
-
----
-
-## 🧑‍💼 Hiring Manager's Notes
-
-*The section below wasn't in the original repo — it's added as candid feedback on what would make this project stand out more in a portfolio review.*
-
-**What's working well:**
-- Clear problem framing (early intervention, not just classification) and a genuine social-good angle (SDG alignment, crisis resources) — shows product thinking, not just model-fitting.
-- End-to-end pipeline is visible: data generation → training → serving, which is more complete than a lot of student ML projects.
-- Reasonable dev hygiene: `.devcontainer` present, dependencies pinned via `requirements.txt`.
-
-**What I'd want to see before treating this as portfolio-ready:**
-
-1. **A license.** There's currently none — add MIT/Apache-2.0 (or similar) so others know they can actually use/fork it.
-2. **Be upfront about synthetic data, right at the top.** 99%+ accuracy on a self-generated, evenly-balanced 300-row synthetic dataset isn't evidence of real-world performance — it mostly proves the generator and model agree with each other. I'd rather see that acknowledged explicitly (done above) and, ideally, a plan or attempt to validate against any real or third-party dataset.
-3. **Tests.** No test suite currently — even a handful of unit tests around `generate_dataset.py` and `train_model.py` would signal engineering maturity beyond notebook-style scripting.
-4. **A live demo link and a screenshot/GIF.** For a Streamlit app, this is the single highest-leverage addition — recruiters and hiring managers rarely clone and run locally.
-5. **requirements.txt version pinning.** Confirm exact versions (`scikit-learn==1.x.x` etc.) are pinned, not just package names, so the training pipeline is reproducible months from now.
-6. **Explain `database.py` and `.devcontainer`.** Both exist in the repo but aren't mentioned anywhere in the original README — what does the database layer store, and is it SQLite/Postgres/local file? Undocumented files make a reviewer wonder what else is missing context.
-7. **Model card / feature importance.** `model_meta.json` reportedly stores feature importances — surfacing the top 3–5 most predictive features in the README (or in-app) would add real credibility and interpretability.
-8. **Commit history / iteration story.** 38 commits is a fine start — a few commits that show debugging, refactoring, or responding to a bug (not just "initial commit" → "final version") tell a much better engineering story than a clean linear history.
-
-None of this changes the core idea, which is solid — it's the packaging and evidence trail that take a project from "class assignment" to "hire signal."
