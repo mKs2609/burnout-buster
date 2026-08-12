@@ -42,10 +42,10 @@ Burnout Buster takes 17 validated inputs spanning academics, social pressure, li
 
 ## Demo
 
-> *Add a live Streamlit Cloud link and a screenshot or GIF of the app here once deployed.*
+
 
 ```
-🔗 Live app: <add-your-streamlit-cloud-url-here>
+🔗 https://burnout-buster-tp2wbhw5ctpsd3ggy8yzlc.streamlit.app/
 ```
 
 ## Tech Stack
