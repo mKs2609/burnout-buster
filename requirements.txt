@@ -1,8 +1,9 @@
 streamlit>=1.32.0
 pandas>=2.0.0
 numpy>=1.26.0
-scikit-learn>=1.3.0
+scikit-learn==1.7.2   # must match the version burnout_model.pkl was trained with (see model_meta.json)
 joblib>=1.3.0
-matplotlib>=3.8.0
-requests>=2.31.0
-
+plotly>=5.20
+sqlalchemy>=2.0
+psycopg[binary]>=3.2
+bcrypt>=4.0

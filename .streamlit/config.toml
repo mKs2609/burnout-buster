@@ -1,0 +1,15 @@
+# Pin the app to its warm light palette. Without this, Streamlit follows the
+# viewer's OS/browser dark mode and renders tables and widgets dark on cream.
+[theme]
+base = "light"
+primaryColor = "#d4603a"
+backgroundColor = "#fdf6ee"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#3d2b1f"
+font = "sans serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

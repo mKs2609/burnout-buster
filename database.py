@@ -1,187 +1,225 @@
 """
-database.py — GitHub-based persistent storage for Burnout Buster v5
-Data is stored as CSV files in a private GitHub repository.
-Never resets, never pauses, completely free forever.
+database.py — SQL storage for Burnout Buster.
+
+Built on SQLAlchemy, so the same code runs on:
+  • SQLite (default) — a local burnout.db file next to this module, zero setup.
+  • PostgreSQL — set DATABASE_URL (env var or .streamlit/secrets.toml), e.g. a free
+    Supabase/Neon database, so data survives Streamlit Cloud restarts.
+
+Tables are created automatically on first use.
+Old CSV data can be imported with `python migrate_csv_to_db.py`.
 """
-import hashlib, json, base64, os
+import hashlib, hmac, os, uuid
+import bcrypt
 from datetime import datetime, timedelta
+from pathlib import Path
 import pandas as pd
 import streamlit as st
+from sqlalchemy import (create_engine, MetaData, Table, Column, Integer, Float, String,
+                        Text, Boolean, DateTime, select, insert, update, delete)
+from sqlalchemy.exc import SQLAlchemyError
 
-FEATURES = [
-    "exams_per_month","assignments_per_week","attendance_pressure","cgpa",
-    "backlogs","study_hours_per_day","fomo_score","peer_pressure",
-    "family_expectations","social_media_hrs","rejection_sensitivity",
-    "sleep_hours","exercise_days","diet_quality","confidence",
-    "support_system","mental_health_visits",
-]
+from scoring import FEATURES
 
-FILES = {
-    "students":          "data/students.csv",
-    "submissions":       "data/submissions.csv",
-    "replies":           "data/replies.csv",
-    "counselor_actions": "data/counselor_actions.csv",
-    "reminders":         "data/reminders.csv",
-    "college_records":   "data/college_records.csv",
-}
+DEFAULT_DB_URL = "sqlite:///" + (Path(__file__).resolve().parent / "burnout.db").as_posix()
+
+# ── SCHEMA ────────────────────────────────────────────────────────────────────
+metadata = MetaData()
+
+students = Table("students", metadata,
+    Column("roll_number",   String(32),  primary_key=True),
+    Column("name",          String(120), nullable=False),
+    Column("email",         String(200), nullable=False, default=""),
+    Column("college",       String(200), nullable=False, default=""),
+    Column("branch",        String(20),  nullable=False),
+    Column("section",       String(5),   nullable=False),
+    Column("age",           Integer),
+    Column("password_hash", String(200), nullable=False),
+    Column("created_at",    DateTime,    nullable=False),
+)
+
+submissions = Table("submissions", metadata,
+    Column("id",                Integer,     primary_key=True, autoincrement=True),
+    Column("roll_number",       String(32),  nullable=False, index=True),
+    Column("student_name",      String(120), nullable=False, default=""),
+    Column("branch",            String(20),  nullable=False, default=""),
+    Column("section",           String(5),   nullable=False, default=""),
+    Column("timestamp",         DateTime,    nullable=False, index=True),
+    Column("burnout_score",     Integer,     nullable=False),
+    Column("burnout_risk",      String(10),  nullable=False),
+    Column("student_note",      Text,        nullable=False, default=""),
+    Column("confidence_high",   Float),
+    Column("confidence_medium", Float),
+    Column("confidence_low",    Float),
+    *[Column(f, Float if f == "cgpa" else Integer) for f in FEATURES],
+)
+
+replies = Table("replies", metadata,
+    Column("id",                Integer,    primary_key=True, autoincrement=True),
+    Column("roll_number",       String(32), nullable=False, index=True),
+    Column("counselor_message", Text,       nullable=False),
+    Column("timestamp",         DateTime,   nullable=False),
+    Column("read_by_student",   Boolean,    nullable=False, default=False),
+)
+
+counselor_actions = Table("counselor_actions", metadata,
+    Column("roll_number", String(32), primary_key=True),
+    Column("status",      String(30), nullable=False),
+    Column("notes",       Text,       nullable=False, default=""),
+    Column("flagged",     Boolean,    nullable=False, default=False),
+    Column("updated_at",  DateTime,   nullable=False),
+)
+
+reminders = Table("reminders", metadata,
+    Column("id",             Integer,  primary_key=True, autoincrement=True),
+    Column("frequency_days", Integer,  nullable=False),
+    Column("last_sent",      DateTime, nullable=False),
+    Column("next_due",       DateTime, nullable=False),
+    Column("created_at",     DateTime, nullable=False),
+)
+
+college_records = Table("college_records", metadata,
+    Column("id",             Integer,     primary_key=True, autoincrement=True),
+    Column("roll_number",    String(32),  nullable=False, index=True),
+    Column("name",           String(120), nullable=False, default=""),
+    Column("attendance_pct", Float),
+    Column("marks_pct",      Float),
+    Column("participation",  String(60),  nullable=False, default=""),
+    Column("remarks",        Text,        nullable=False, default=""),
+    Column("branch",         String(20),  nullable=False),
+    Column("section",        String(5),   nullable=False),
+    Column("uploaded_at",    DateTime,    nullable=False),
+)
+
+# Counselor alerts live in the database (not session state) so an alert raised by a
+# student's submission is visible in the counselor's session.
+notifications = Table("notifications", metadata,
+    Column("id",          String(32),  primary_key=True),
+    Column("created_at",  DateTime,    nullable=False, index=True),
+    Column("name",        String(120), nullable=False, default=""),
+    Column("roll_number", String(32),  nullable=False),
+    Column("risk",        String(10),  nullable=False),
+    Column("score",       Integer,     nullable=False),
+    Column("flagged",     Boolean,     nullable=False, default=False),
+    Column("read",        Boolean,     nullable=False, default=False),
+)
+
+# ── ENGINE ────────────────────────────────────────────────────────────────────
+def database_url() -> str:
+    url = os.environ.get("DATABASE_URL", "")
+    if not url:
+        try: url = str(st.secrets.get("DATABASE_URL", ""))
+        except Exception: url = ""
+    url = url.strip() or DEFAULT_DB_URL
+    # Hosted Postgres providers hand out postgres:// URLs; use the psycopg 3 driver
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+def make_engine(url: str = None):
+    engine = create_engine(url or database_url(), pool_pre_ping=True)
+    metadata.create_all(engine)
+    return engine
+
+@st.cache_resource
+def get_engine():
+    return make_engine()
+
+def _now() -> datetime:
+    return datetime.now().replace(microsecond=0)
+
+def _execute(*stmts) -> bool:
+    """Run write statements in one transaction. Returns False if it failed."""
+    try:
+        with get_engine().begin() as conn:
+            for stmt in stmts:
+                conn.execute(stmt)
+        return True
+    except SQLAlchemyError:
+        return False
+
+def _df(stmt) -> pd.DataFrame:
+    with get_engine().connect() as conn:
+        return pd.read_sql(stmt, conn)
+
+def _first(stmt) -> dict:
+    with get_engine().connect() as conn:
+        row = conn.execute(stmt).mappings().first()
+    return dict(row) if row else {}
+
+def _text(v) -> str:
+    return "" if v is None or pd.isna(v) else str(v).strip()
+
+def _number(v):
+    n = pd.to_numeric(v, errors="coerce")
+    return None if pd.isna(n) else float(n)
+
+MIN_PASSWORD_LENGTH = 8
+
+def _pwd_bytes(pwd: str) -> bytes:
+    return str(pwd).strip().encode("utf-8")[:72]   # bcrypt ignores anything past 72 bytes
 
 def hash_password(pwd: str) -> str:
-    return hashlib.sha256(str(pwd).strip().encode("utf-8")).hexdigest()
+    return bcrypt.hashpw(_pwd_bytes(pwd), bcrypt.gensalt()).decode()
 
-# ── GITHUB API ────────────────────────────────────────────────────────────────
-def _gh_headers():
-    try:
-        token = st.secrets["GITHUB_TOKEN"]
-        return {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
-    except Exception:
-        return {}
-
-def _gh_repo():
-    try:
-        return st.secrets["GITHUB_REPO"]
-    except Exception:
-        return ""
-
-def _get_file(path: str):
-    """Get file content and SHA from GitHub."""
-    import requests
-    repo = _gh_repo()
-    headers = _gh_headers()
-    if not repo or not headers:
-        return None, None
-    url = f"https://api.github.com/repos/{repo}/contents/{path}"
-    try:
-        r = requests.get(url, headers=headers, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            content = base64.b64decode(data["content"]).decode("utf-8")
-            return content, data["sha"]
-        return None, None
-    except Exception:
-        return None, None
-
-def _put_file(path: str, content: str, sha: str = None, message: str = "update data"):
-    """Create or update a file on GitHub."""
-    import requests
-    repo = _gh_repo()
-    headers = _gh_headers()
-    if not repo or not headers:
-        return False
-    url = f"https://api.github.com/repos/{repo}/contents/{path}"
-    payload = {
-        "message": message,
-        "content": base64.b64encode(content.encode("utf-8")).decode("utf-8"),
-    }
-    if sha:
-        payload["sha"] = sha
-    try:
-        r = requests.put(url, headers=headers, json=payload, timeout=15)
-        return r.status_code in (200, 201)
-    except Exception:
-        return False
-
-
-def _read_df(file_key: str) -> pd.DataFrame:
-    """Read CSV — tries GitHub first, falls back to local file."""
-    # Try local first (faster for local development)
-    local_path = f"local_{file_key}.csv"
-    if os.path.exists(local_path):
+def check_password(pwd: str, stored: str):
+    """Returns (is_correct, needs_upgrade). Accounts created before bcrypt used plain
+    SHA-256; those still verify and are re-hashed on the next successful login."""
+    stored = str(stored or "").strip()
+    if stored.startswith("$2"):
         try:
-            return pd.read_csv(local_path, dtype=str)
-        except Exception:
-            pass
-    # Try GitHub
-    path = FILES[file_key]
-    content, _ = _get_file(path)
-    if content and content.strip():
-        try:
-            from io import StringIO
-            return pd.read_csv(StringIO(content), dtype=str)
-        except Exception:
-            pass
-    return pd.DataFrame()
-
-def _write_df(file_key: str, df: pd.DataFrame, message: str = "update") -> bool:
-    """Write DataFrame — saves locally AND to GitHub."""
-    # Always save locally
-    local_path = f"local_{file_key}.csv"
-    df.to_csv(local_path, index=False)
-    # Try GitHub
-    path = FILES[file_key]
-    _, sha = _get_file(path)
-    content = df.to_csv(index=False)
-    return _put_file(path, content, sha, message)
-
-def _append_row(file_key: str, row: dict) -> bool:
-    """Append a row — saves locally AND to GitHub."""
-    df = _read_df(file_key)
-    new_row = pd.DataFrame([row])
-    df = pd.concat([df, new_row], ignore_index=True) if not df.empty else new_row
-    # Save locally
-    local_path = f"local_{file_key}.csv"
-    df.to_csv(local_path, index=False)
-    # Save to GitHub (for live site)
-    _write_df(file_key, df, f"add {file_key} record")
-    return True
+            return bcrypt.checkpw(_pwd_bytes(pwd), stored.encode()), False
+        except ValueError:
+            return False, False
+    legacy = hashlib.sha256(_pwd_bytes(pwd)).hexdigest()
+    return hmac.compare_digest(legacy, stored), True
 
 # ── STUDENT AUTH ──────────────────────────────────────────────────────────────
-def student_exists(roll: str, branch: str = "", section: str = "") -> bool:
-    if not roll or not roll.strip():
-        return False
-    df = _read_df("students")
-    if df.empty or "roll_number" not in df.columns:
-        return False
-    mask = df["roll_number"].str.strip() == roll.strip()
-    if branch:
-        mask = mask & (df.get("branch", pd.Series([""] * len(df))).str.strip() == branch.strip())
-    if section:
-        mask = mask & (df.get("section", pd.Series([""] * len(df))).str.strip() == section.strip())
-    return mask.any()
+def get_student(roll: str):
+    if not roll or not str(roll).strip():
+        return None
+    return _first(select(students).where(students.c.roll_number == str(roll).strip())) or None
+
+def student_exists(roll: str) -> bool:
+    """Roll numbers are unique — one profile per roll number."""
+    return get_student(roll) is not None
 
 def register_student(roll, name, email, college, branch, section, age, password) -> bool:
-    if student_exists(roll.strip(), branch, section):
+    """Returns False if the roll number is already registered or the save failed."""
+    try:
+        with get_engine().begin() as conn:
+            conn.execute(insert(students).values(
+                roll_number=str(roll).strip(), name=str(name).strip(),
+                email=str(email).strip(), college=str(college),
+                branch=str(branch), section=str(section), age=int(age),
+                password_hash=hash_password(password), created_at=_now()))
         return True
-    row = {
-        "roll_number": str(roll).strip(),
-        "name": str(name).strip(),
-        "email": str(email).strip(),
-        "college": str(college),
-        "branch": str(branch),
-        "section": str(section),
-        "age": str(age),
-        "password_hash": hash_password(str(password)),
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }
-    return _append_row("students", row)
+    except SQLAlchemyError:   # IntegrityError = roll number already registered
+        return False
 
-def verify_student(roll: str, password: str, branch: str = "", section: str = ""):
+def verify_student(roll: str, password: str, branch: str, section: str):
+    """Roll number, password, branch and section must all match."""
     if not roll or not password:
         return None
-    roll = str(roll).strip()
-    h = hash_password(str(password))
-    df = _read_df("students")
-    if df.empty or "roll_number" not in df.columns or "password_hash" not in df.columns:
+    student = get_student(roll)
+    if not student:
         return None
-    # Try with branch and section first
-    mask = (df["roll_number"].str.strip() == roll) & (df["password_hash"].str.strip() == h)
-    if branch:
-        mask_full = mask & (df.get("branch", pd.Series([""] * len(df))).str.strip() == branch.strip())
-        match = df[mask_full]
-        if not match.empty:
-            return match.iloc[0].to_dict()
-    # Fallback — match by roll + password only
-    match = df[mask]
-    return match.iloc[0].to_dict() if not match.empty else None
+    ok, needs_upgrade = check_password(password, student["password_hash"])
+    if not ok:
+        return None
+    if student["branch"] != str(branch).strip() or student["section"] != str(section).strip():
+        return None
+    if needs_upgrade:   # re-hash a legacy SHA-256 password with bcrypt
+        new_hash = hash_password(password)
+        if _execute(update(students)
+                    .where(students.c.roll_number == student["roll_number"])
+                    .values(password_hash=new_hash)):
+            student["password_hash"] = new_hash
+    return student
 
 def get_all_students() -> pd.DataFrame:
-    return _read_df("students")
-
-def get_student(roll: str):
-    df = _read_df("students")
-    if df.empty or "roll_number" not in df.columns:
-        return None
-    match = df[df["roll_number"].str.strip() == str(roll).strip()]
-    return match.iloc[0].to_dict() if not match.empty else None
+    return _df(select(*[c for c in students.c if c.name != "password_hash"]))
 
 # ── SUBMISSIONS ───────────────────────────────────────────────────────────────
 def save_submission(roll, name, branch, section, features: dict,
@@ -191,121 +229,112 @@ def save_submission(roll, name, branch, section, features: dict,
         "student_name": str(name).strip(),
         "branch": str(branch),
         "section": str(section),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "burnout_score": str(score),
+        "timestamp": _now(),
+        "burnout_score": int(score),
         "burnout_risk": risk,
-        "student_note": str(note),
-        "confidence_high": str(round(proba.get("High", 0), 3)),
-        "confidence_medium": str(round(proba.get("Medium", 0), 3)),
-        "confidence_low": str(round(proba.get("Low", 0), 3)),
+        "student_note": str(note or ""),
+        "confidence_high": round(float(proba.get("High", 0)), 3),
+        "confidence_medium": round(float(proba.get("Medium", 0)), 3),
+        "confidence_low": round(float(proba.get("Low", 0)), 3),
     }
-    for k, v in features.items():
-        row[k] = str(v)
-    return _append_row("submissions", row)
+    for f in FEATURES:
+        row[f] = float(features[f]) if f == "cgpa" else int(features[f])
+    return _execute(insert(submissions).values(**row))
 
 def get_student_submissions(roll: str) -> pd.DataFrame:
-    df = _read_df("submissions")
-    if df.empty or "roll_number" not in df.columns:
-        return pd.DataFrame()
-    result = df[df["roll_number"].str.strip() == str(roll).strip()].copy()
-    if "burnout_score" in result.columns:
-        result["burnout_score"] = pd.to_numeric(result["burnout_score"], errors="coerce").fillna(0).astype(int)
-    return result.reset_index(drop=True)
+    return _df(select(submissions)
+               .where(submissions.c.roll_number == str(roll).strip())
+               .order_by(submissions.c.timestamp, submissions.c.id))
 
 def get_all_submissions() -> pd.DataFrame:
-    df = _read_df("submissions")
-    if not df.empty and "burnout_score" in df.columns:
-        df["burnout_score"] = pd.to_numeric(df["burnout_score"], errors="coerce").fillna(0).astype(int)
-    return df
+    return _df(select(submissions).order_by(submissions.c.timestamp, submissions.c.id))
 
 # ── COUNSELOR ACTIONS ────────────────────────────────────────────────────────
 def upsert_counselor_action(roll, status, notes, flagged=False) -> bool:
-    df = _read_df("counselor_actions")
     roll = str(roll).strip()
-    row = {
-        "roll_number": roll,
-        "status": status,
-        "notes": str(notes),
-        "flagged": str(flagged),
-        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }
-    if not df.empty and "roll_number" in df.columns:
-        df = df[df["roll_number"].str.strip() != roll]
-    new_row = pd.DataFrame([row])
-    df = pd.concat([df, new_row], ignore_index=True) if not df.empty else new_row
-    return _write_df("counselor_actions", df, f"update action {roll}")
+    return _execute(
+        delete(counselor_actions).where(counselor_actions.c.roll_number == roll),
+        insert(counselor_actions).values(roll_number=roll, status=status, notes=str(notes or ""),
+                                         flagged=bool(flagged), updated_at=_now()),
+    )
 
 def get_counselor_action(roll) -> dict:
-    df = _read_df("counselor_actions")
-    if df.empty or "roll_number" not in df.columns:
-        return {}
-    match = df[df["roll_number"].str.strip() == str(roll).strip()]
-    return match.iloc[0].to_dict() if not match.empty else {}
+    return _first(select(counselor_actions).where(counselor_actions.c.roll_number == str(roll).strip()))
+
+def get_all_counselor_actions() -> dict:
+    """{roll_number: action} for every student — one query for the whole dashboard."""
+    df = _df(select(counselor_actions))
+    return {r["roll_number"]: r for r in df.to_dict("records")}
 
 # ── REPLIES ───────────────────────────────────────────────────────────────────
 def save_reply(roll, message) -> bool:
-    row = {
-        "roll_number": str(roll).strip(),
-        "counselor_message": str(message),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "read_by_student": "False",
-    }
-    return _append_row("replies", row)
+    return _execute(insert(replies).values(
+        roll_number=str(roll).strip(), counselor_message=str(message),
+        timestamp=_now(), read_by_student=False))
 
 def get_replies(roll) -> pd.DataFrame:
-    df = _read_df("replies")
-    if df.empty or "roll_number" not in df.columns:
-        return pd.DataFrame()
-    return df[df["roll_number"].str.strip() == str(roll).strip()].reset_index(drop=True)
+    return _df(select(replies)
+               .where(replies.c.roll_number == str(roll).strip())
+               .order_by(replies.c.timestamp, replies.c.id))
 
-def mark_replies_read(roll):
-    df = _read_df("replies")
-    if df.empty or "roll_number" not in df.columns:
-        return
-    df.loc[df["roll_number"].str.strip() == str(roll).strip(), "read_by_student"] = "True"
-    _write_df("replies", df, f"mark replies read {roll}")
+def mark_replies_read(roll) -> bool:
+    return _execute(update(replies)
+                    .where(replies.c.roll_number == str(roll).strip(),
+                           replies.c.read_by_student.is_(False))
+                    .values(read_by_student=True))
 
 # ── REMINDERS ────────────────────────────────────────────────────────────────
 def get_reminder() -> dict:
-    df = _read_df("reminders")
-    if df.empty:
-        return {}
-    return df.iloc[-1].to_dict()
+    return _first(select(reminders).order_by(reminders.c.id.desc()).limit(1))
 
 def save_reminder(frequency_days: int) -> bool:
-    next_due = (datetime.now() + timedelta(days=frequency_days)).strftime("%Y-%m-%d %H:%M:%S")
-    row = {
-        "frequency_days": str(frequency_days),
-        "last_sent": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "next_due": next_due,
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }
-    return _append_row("reminders", row)
+    now = _now()
+    return _execute(insert(reminders).values(
+        frequency_days=int(frequency_days), last_sent=now,
+        next_due=now + timedelta(days=int(frequency_days)), created_at=now))
 
 # ── COLLEGE RECORDS ───────────────────────────────────────────────────────────
 def save_college_records(df_records: pd.DataFrame, branch: str, section: str) -> bool:
-    """Save college academic records uploaded by counselor."""
-    df_records["branch"] = branch
-    df_records["section"] = section
-    df_records["uploaded_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    existing = _read_df("college_records")
-    if not existing.empty and "roll_number" in existing.columns and "roll_number" in df_records.columns:
-        # Remove old records for this branch+section
-        mask = ~((existing.get("branch", "") == branch) & (existing.get("section", "") == section))
-        existing = existing[mask]
-        combined = pd.concat([existing, df_records], ignore_index=True)
-    else:
-        combined = df_records
-    return _write_df("college_records", combined, f"upload records {branch}-{section}")
+    """Replace the records for this branch+section with the uploaded ones."""
+    now = _now()
+    rows = [{
+        "roll_number": _text(r.get("roll_number")),
+        "name": _text(r.get("name")),
+        "attendance_pct": _number(r.get("attendance_pct")),
+        "marks_pct": _number(r.get("marks_pct")),
+        "participation": _text(r.get("participation")),
+        "remarks": _text(r.get("remarks")),
+        "branch": branch, "section": section, "uploaded_at": now,
+    } for r in df_records.to_dict("records")]
+    stmts = [delete(college_records).where(college_records.c.branch == branch,
+                                           college_records.c.section == section)]
+    if rows:
+        stmts.append(insert(college_records).values(rows))
+    return _execute(*stmts)
 
 def get_college_records(roll: str = "", branch: str = "", section: str = "") -> pd.DataFrame:
-    df = _read_df("college_records")
-    if df.empty:
-        return pd.DataFrame()
-    if roll:
-        df = df[df.get("roll_number", pd.Series()).str.strip() == str(roll).strip()]
-    if branch:
-        df = df[df.get("branch", pd.Series()) == branch]
-    if section:
-        df = df[df.get("section", pd.Series()) == section]
-    return df.reset_index(drop=True)
+    stmt = select(*[c for c in college_records.c if c.name != "id"])
+    if roll:    stmt = stmt.where(college_records.c.roll_number == str(roll).strip())
+    if branch:  stmt = stmt.where(college_records.c.branch == branch)
+    if section: stmt = stmt.where(college_records.c.section == section)
+    return _df(stmt)
+
+# ── COUNSELOR ALERTS ─────────────────────────────────────────────────────────
+def add_notification(name, roll, risk, score, flagged=False) -> bool:
+    return _execute(insert(notifications).values(
+        id=uuid.uuid4().hex[:12], created_at=_now(), name=str(name).strip(),
+        roll_number=str(roll).strip(), risk=str(risk), score=int(score),
+        flagged=bool(flagged), read=False))
+
+def get_notifications(days: int = 30) -> pd.DataFrame:
+    """Alerts from the last `days` days, newest first."""
+    return _df(select(notifications)
+               .where(notifications.c.created_at >= _now() - timedelta(days=days))
+               .order_by(notifications.c.created_at.desc()))
+
+def mark_notifications_read(ids=None) -> bool:
+    """Mark the given alert ids read, or all alerts when ids is None."""
+    stmt = update(notifications).values(read=True)
+    if ids is not None:
+        stmt = stmt.where(notifications.c.id.in_(list(ids)))
+    return _execute(stmt)

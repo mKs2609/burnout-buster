@@ -1,4 +1,10 @@
 {
+  "model": "Ordinal monotonic boosting",
+  "trained_at": "2026-09-20 13:58",
+  "sklearn_version": "1.7.2",
+  "data": "Synthetic (simulated) survey data \u2014 see generate_dataset.py",
+  "n_samples": 5000,
+  "n_test": 1000,
   "features": [
     "exams_per_month",
     "assignments_per_week",
@@ -19,28 +25,103 @@
     "mental_health_visits"
   ],
   "classes": [
-    "High",
     "Low",
-    "Medium"
+    "Medium",
+    "High"
   ],
-  "accuracy": 100.0,
+  "accuracy": 82.8,
+  "f1_macro": 82.4,
+  "low_high_confusion_pct": 0.3,
+  "confusion_matrix": [
+    [
+      367,
+      30,
+      3
+    ],
+    [
+      64,
+      240,
+      46
+    ],
+    [
+      0,
+      29,
+      221
+    ]
+  ],
+  "comparison": {
+    "Majority class (baseline)": {
+      "cv_accuracy": 40.0,
+      "cv_accuracy_std": 0.0,
+      "cv_f1_macro": 19.0
+    },
+    "Logistic regression": {
+      "cv_accuracy": 82.1,
+      "cv_accuracy_std": 1.7,
+      "cv_f1_macro": 81.9
+    },
+    "Random forest": {
+      "cv_accuracy": 79.8,
+      "cv_accuracy_std": 2.0,
+      "cv_f1_macro": 79.7
+    },
+    "Gradient boosting": {
+      "cv_accuracy": 79.7,
+      "cv_accuracy_std": 1.2,
+      "cv_f1_macro": 79.5
+    },
+    "Ordinal monotonic boosting": {
+      "cv_accuracy": 80.2,
+      "cv_accuracy_std": 1.2,
+      "cv_f1_macro": 79.7
+    }
+  },
+  "sanity_checks": {
+    "more sleep_hours never raises the score": true,
+    "more support_system never raises the score": true,
+    "more backlogs never lowers the score": true,
+    "more social_media_hrs never lowers the score": true,
+    "3h sleep is not 'Thriving'": true,
+    "12h social media is not 'Thriving'": true,
+    "worst answers -> At Risk": true,
+    "best answers -> Thriving": true
+  },
   "feature_importances": {
-    "rejection_sensitivity": 0.1465,
-    "cgpa": 0.1021,
-    "support_system": 0.1014,
-    "confidence": 0.0907,
-    "fomo_score": 0.0839,
-    "peer_pressure": 0.0743,
-    "social_media_hrs": 0.0661,
-    "assignments_per_week": 0.0622,
-    "exams_per_month": 0.0593,
-    "sleep_hours": 0.0513,
-    "family_expectations": 0.0461,
-    "exercise_days": 0.0344,
-    "diet_quality": 0.0299,
-    "attendance_pressure": 0.0281,
-    "study_hours_per_day": 0.018,
-    "backlogs": 0.0045,
-    "mental_health_visits": 0.0014
+    "sleep_hours": 0.076,
+    "support_system": 0.0526,
+    "confidence": 0.0513,
+    "rejection_sensitivity": 0.0401,
+    "assignments_per_week": 0.0368,
+    "fomo_score": 0.0355,
+    "family_expectations": 0.0302,
+    "peer_pressure": 0.0253,
+    "social_media_hrs": 0.0251,
+    "exams_per_month": 0.0145,
+    "exercise_days": 0.0144,
+    "attendance_pressure": 0.0134,
+    "cgpa": 0.0128,
+    "backlogs": 0.0087,
+    "diet_quality": 0.0044,
+    "study_hours_per_day": 0.0034,
+    "mental_health_visits": 0.0028
+  },
+  "reference_profile": {
+    "exams_per_month": 3,
+    "assignments_per_week": 5,
+    "attendance_pressure": 5,
+    "cgpa": 7.7,
+    "backlogs": 0,
+    "study_hours_per_day": 5,
+    "fomo_score": 4,
+    "peer_pressure": 4,
+    "family_expectations": 5,
+    "social_media_hrs": 2,
+    "rejection_sensitivity": 4,
+    "sleep_hours": 8,
+    "exercise_days": 4,
+    "diet_quality": 7,
+    "confidence": 7,
+    "support_system": 8,
+    "mental_health_visits": 0
   }
 }

@@ -1,0 +1,22 @@
+# Secrets — never commit real passwords or database URLs
+.streamlit/secrets.toml
+
+# Student data (personal information)
+burnout.db
+local_*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# Tooling
+.claude/
+mlflow.db
+mlruns/
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
