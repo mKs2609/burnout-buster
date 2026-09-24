@@ -17,7 +17,7 @@ def _style(fig, height=340, title=None, showlegend=False):
         title=dict(text=title, font=dict(family="Playfair Display, serif", size=17, color="#2d1a0e")) if title else None,
         paper_bgcolor=COLOR_SURFACE, plot_bgcolor=COLOR_SURFACE,
         font=dict(family="DM Sans, sans-serif", size=12, color=COLOR_TEXT),
-        margin=dict(l=10, r=10, t=44 if title else 16, b=10),
+        margin=dict(l=10, r=34, t=44 if title else 16, b=10),
         showlegend=showlegend,
         hoverlabel=dict(bgcolor="white", bordercolor=COLOR_GRID,
                         font=dict(family="DM Sans, sans-serif", color=COLOR_TEXT)),
@@ -39,7 +39,7 @@ def score_history(dates, scores):
     """A student's score over time, with the band thresholds marked."""
     fig = go.Figure(go.Scatter(
         x=list(dates), y=list(scores), mode="lines+markers+text",
-        line=dict(color=COLOR_RISK, width=3, shape="spline"),
+        line=dict(color=COLOR_RISK, width=3, shape="linear"),
         marker=dict(size=11, color="white", line=dict(color=COLOR_RISK, width=3)),
         text=[str(s) for s in scores], textposition="top center",
         textfont=dict(size=11, color="#2d1a0e"),
@@ -85,7 +85,7 @@ def trend(dates, scores, counts=None):
     hover = "<b>%{y:.0f}/100</b><br>%{x|%d %b %Y}"
     fig = go.Figure(go.Scatter(
         x=list(dates), y=list(scores), mode="lines+markers",
-        line=dict(color=COLOR_RISK, width=3, shape="spline"),
+        line=dict(color=COLOR_RISK, width=3, shape="linear"),
         marker=dict(size=9, color="white", line=dict(color=COLOR_RISK, width=3)),
         fill="tozeroy", fillcolor="rgba(212,96,58,0.10)",
         customdata=list(counts) if counts is not None else None,

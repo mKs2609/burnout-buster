@@ -126,6 +126,18 @@ def make_engine(url: str = None):
 def get_engine():
     return make_engine()
 
+def storage_summary() -> dict:
+    """What the app is actually storing data in — shown to counselors so a
+    misconfigured DATABASE_URL can't silently leave the app on throwaway storage."""
+    url = get_engine().url
+    backend = url.get_backend_name()
+    is_sqlite = backend == "sqlite"
+    return {
+        "backend": {"sqlite": "SQLite", "postgresql": "PostgreSQL"}.get(backend, backend.title()),
+        "location": url.database if is_sqlite else (url.host or ""),
+        "persistent": not is_sqlite,
+    }
+
 def _now() -> datetime:
     return datetime.now().replace(microsecond=0)
 

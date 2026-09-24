@@ -1,0 +1,40 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Check the model still scores sensibly
+        # Guards the committed burnout_model.pkl against a library upgrade
+        # silently changing its behaviour.
+        run: |
+          python - <<'PY'
+          import json, joblib
+          from scoring import assess, risk_from_score
+          model = joblib.load("burnout_model.pkl")
+          meta = json.load(open("model_meta.json"))
+          healthy = meta["reference_profile"]
+          assert assess(model, meta, healthy)["risk"] == "Low"
+          assert assess(model, meta, {**healthy, "sleep_hours": 3})["risk"] != "Low"
+          print("model loads and scores as expected")
+          PY

@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from constants import BRANCHES, SECTIONS
 from ui import esc, first_name, score_info, section_divider
-from utils import checkin_days_left, get_reminder_frequency, trajectory
+from utils import checkin_days_left, format_ts, get_reminder_frequency, trajectory
 import charts
 
 def render():
@@ -145,7 +145,7 @@ def render():
                 st.markdown("<div class='reply-card'>"
                             "<div style='color:#b09070;font-size:11px;font-weight:700;"
                             "letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;'>"
-                            "Your Counselor &nbsp;·&nbsp; " + esc(ts) + "</div>"
+                            "Your Counselor &nbsp;·&nbsp; " + esc(format_ts(ts)) + "</div>"
                             + esc(msg).replace("\n","<br>") + "</div>", unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)

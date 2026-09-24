@@ -159,3 +159,9 @@ def test_writes_report_failure_instead_of_pretending(broken_db):
     assert broken_db.upsert_counselor_action("1001", "Contacted", "") is False
     assert broken_db.add_notification("A", "1001", "High", 80) is False
     assert broken_db.register_student("9", "X", "", "c", "CSE", "A", 20, "pass-word") is False
+
+
+def test_storage_summary_reports_the_backend_in_use(database):
+    """Counselors are told when the app is on throwaway storage."""
+    summary = database.storage_summary()
+    assert summary["backend"] == "SQLite" and summary["persistent"] is False

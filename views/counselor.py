@@ -3,8 +3,9 @@ import streamlit as st
 import pandas as pd
 import hmac, html
 from constants import BRANCHES, RISK_LABELS, SECTIONS
+from database import storage_summary
 from ui import esc
-from utils import checkin_days_left, get_reminder_frequency, latest_per_student
+from utils import checkin_days_left, format_ts, get_reminder_frequency, latest_per_student
 
 def render():
     from database import (get_all_submissions, get_all_students, upsert_counselor_action,
@@ -27,11 +28,13 @@ def render():
             pwd = st.text_input("Password", type="password",
                                 placeholder="Enter counselor password", key="c_pwd")
             if st.button("Sign In", use_container_width=True, key="c_login"):
-                try: expected = str(st.secrets["COUNSELOR_PASSWORD"])
+                # Pasting into a secrets box easily picks up a trailing space or
+                # newline; that shouldn't lock a counselor out of the dashboard.
+                try: expected = str(st.secrets["COUNSELOR_PASSWORD"]).strip()
                 except Exception: expected = ""
                 if not expected:
                     st.error("Counselor login isn't configured. Set COUNSELOR_PASSWORD in .streamlit/secrets.toml.")
-                elif hmac.compare_digest(pwd.encode("utf-8"), expected.encode("utf-8")):
+                elif hmac.compare_digest(pwd.strip().encode("utf-8"), expected.encode("utf-8")):
                     st.session_state.counselor_logged_in = True
                     st.rerun()
                 else:
@@ -49,6 +52,16 @@ def render():
             if st.button("Sign Out", key="c_out"):
                 st.session_state.counselor_logged_in = False
                 st.rerun()
+
+        # Where data is being stored — a misconfigured DATABASE_URL would otherwise
+        # leave the app quietly writing to storage that is wiped on every restart.
+        store = storage_summary()
+        if store["persistent"]:
+            st.caption(f"Storage: {store['backend']} · {store['location']} — submissions are saved permanently.")
+        else:
+            st.warning(f"**Temporary storage in use** ({store['backend']}: {store['location']}). "
+                       "Everything here is erased when the app restarts. Set `DATABASE_URL` in the app's "
+                       "secrets — it must sit above any `[section]` line — then reboot the app.")
 
         # Alerts
         notifs = get_notifications()
@@ -248,7 +261,7 @@ def render():
 
                 right_part = "<span class='" + badge_css_d + "' style='font-size:12px;'>" + esc(RISK_LABELS.get(risk_d, risk_d)) + "</span>"
                 right_part += "<span style='color:#6b4f3f;font-size:14px;font-family:Playfair Display,serif;font-weight:700;margin-left:10px;'>" + str(score_d) + "/100</span>"
-                right_part += "<div style='color:#b09070;font-size:11px;margin-top:4px;'>" + esc(ts_d) + "</div>"
+                right_part += "<div style='color:#b09070;font-size:11px;margin-top:4px;'>" + esc(format_ts(ts_d)) + "</div>"
 
                 note_part = ""
                 if note_d and str(note_d).strip() and str(note_d).strip()!="nan":

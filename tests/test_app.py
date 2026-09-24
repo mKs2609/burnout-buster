@@ -224,3 +224,11 @@ def test_model_card_discloses_simulated_data_and_metrics(app):
     at = app()
     assert any("simulated" in w.value for w in at.warning)
     assert len(at.dataframe) >= 2      # confusion matrix + model comparison
+
+
+def test_counselor_password_tolerates_stray_whitespace(app):
+    """A password pasted into a secrets box often carries a trailing space."""
+    at = app()
+    at.text_input(key="c_pwd").input("  " + COUNSELOR_PASSWORD + "  ")
+    at = at.button(key="c_login").click().run()
+    assert at.session_state.counselor_logged_in

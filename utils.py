@@ -30,3 +30,9 @@ def latest_per_student(df):
         return df.copy()
     return df.sort_values("timestamp").drop_duplicates("roll_number", keep="last").reset_index(drop=True)
 
+
+
+def format_ts(value, fmt="%d %b %Y, %I:%M %p"):
+    """Human-readable timestamp. Falls back to the raw value if it won't parse."""
+    ts = pd.to_datetime(value, errors="coerce")
+    return ts.strftime(fmt) if pd.notna(ts) else str(value or "")
